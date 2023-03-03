@@ -1,6 +1,6 @@
 package de.dereingerostete.hue.api;
 
-import com.stream_pi.action_api.actionproperty.property.ListValue;
+import com.stream_pi.action_api.externalplugin.ExternalPlugin;
 import com.stream_pi.util.version.Version;
 import io.github.zeroone3010.yahueapi.Hue;
 import io.github.zeroone3010.yahueapi.Light;
@@ -10,8 +10,6 @@ import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -19,6 +17,7 @@ import java.util.logging.Logger;
 public class HueAPI {
     public static final @NotNull Version VERSION = new Version(1, 0, 0);
     private static final @NotNull HueAPI INSTANCE = new HueAPI();
+    private @Nullable ExternalPlugin plugin;
     private @Nullable String bridgeIp, apiKey, appName;
     private @Nullable Button connectionButton;
     private @Nullable HueConnector connector;
@@ -32,8 +31,9 @@ public class HueAPI {
                 .apiKey(apiKey)
                 .appName(appName)
                 .logger(Objects.requireNonNull(logger))
-                .onConnected(hueInstance -> {
-                    this.hue = hueInstance;
+                .onConnected(result -> {
+                    this.hue = result.getInstance();
+                    result.updateProperties("api_key", "ip");
                     onConnected.run();
                 });
         connector = builder.build();
@@ -51,39 +51,19 @@ public class HueAPI {
     }
 
     @Nullable
-    public Light getLight(@NotNull String id) {
+    public Light getLight(@NotNull String name) {
         Room room0 = Objects.requireNonNull(hue).getAllLights();
-        return room0.getLights().stream()
-                .filter(light -> light.getId().equals(id))
-                .findAny().orElse(null);
+        return room0.getLightByName(name).orElse(null);
     }
 
     @Nullable
-    public Room getRoom(@NotNull String id) {
-        Collection<Room> rooms = Objects.requireNonNull(hue).getRooms();
-        return rooms.stream()
-                .filter(room -> room.getId().equals(id))
-                .findAny().orElse(null);
-    }
-
-    @NotNull
-    public List<ListValue> getLightNames() {
-        Room room0 = Objects.requireNonNull(hue).getAllLights();
-        return room0.getLights().stream()
-                .map(light -> new ListValue(light.getId(), light.getName()))
-                .toList();
-    }
-
-    @NotNull
-    public List<ListValue> getRoomNames() {
-        Collection<Room> rooms = Objects.requireNonNull(hue).getRooms();
-        return rooms.stream()
-                .map(room -> new ListValue(room.getId(), room.getName()))
-                .toList();
+    public Room getRoom(@NotNull String name) {
+        return Objects.requireNonNull(hue).getRoomByName(name).orElse(null);
     }
 
     @NotNull
     public static HueAPI getInstance() {
         return INSTANCE;
     }
+
 }

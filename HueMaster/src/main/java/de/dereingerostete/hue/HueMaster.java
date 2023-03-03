@@ -33,6 +33,7 @@ public class HueMaster extends NormalAction {
         this.firstRun = true;
         this.connectionButton = new Button("Connect");
         setServerSettingsButtonBar(connectionButton);
+        hueAPI.setPlugin(this);
     }
 
     @Override
@@ -47,29 +48,30 @@ public class HueMaster extends NormalAction {
         keyProperty.setCanBeBlank(true);
 
         Property appNameProperty = new Property("app_name", Type.STRING);
-        appNameProperty.setControlType(ControlType.TEXT_FIELD_MASKED);
         appNameProperty.setDisplayName("App Name");
         appNameProperty.setDefaultValueStr("StreamPi");
         appNameProperty.setCanBeBlank(true);
 
         Property startupProperty = new Property("connect_on_startup", Type.BOOLEAN);
         startupProperty.setDisplayName("Connect On Startup");
-        startupProperty.setDefaultValueBoolean(false);
+        startupProperty.setDefaultValueBoolean(true);
 
         //Add all properties
-        addServerProperties(urlProperty, keyProperty, startupProperty);
+        addServerProperties(urlProperty, keyProperty, appNameProperty, startupProperty);
     }
 
     @Override
     public void initAction() throws MinorException {
         boolean startupRun = getPropertyByName("connect_on_startup").getBoolValue();
         if (startupRun && firstRun) {
+            getLogger().info("Connecting to Hue");
             connect();
         }
 
-        String bridgeIp = getPropertyByName("ip").getStringValue();
-        String apiKey = getPropertyByName("api_key").getRawValue();
-        String appName = getPropertyByName("app_name").getStringValue();
+        String bridgeIp = getNullableProperty("ip");
+        String apiKey = getNullableProperty("api_key");
+        String appName = getNullableProperty("app_name");
+
         hueAPI.setProperties(bridgeIp, apiKey, appName);
         hueAPI.setConnectionButton(connectionButton);
         hueAPI.setLogger(getLogger());
@@ -89,9 +91,9 @@ public class HueMaster extends NormalAction {
 
     private void connect() {
         try {
-            String bridgeIp = getPropertyByName("ip").getStringValue();
-            String apiKey = getPropertyByName("api_key").getRawValue();
-            String appName = getPropertyByName("app_name").getStringValue();
+            String apiKey = getNullableProperty("api_key");
+            String bridgeIp = getNullableProperty("ip");
+            String appName = getNullableProperty("app_name");
 
             HueConnector.Builder builder = HueConnector.builder()
                     .bridgeIp(bridgeIp)
@@ -99,16 +101,29 @@ public class HueMaster extends NormalAction {
                     .appName(appName)
                     .logger(getLogger())
                     .onConnectFail(() -> setConnectionButtonText("Connect"))
-                    .onConnected(hueInstance -> {
-                        hueAPI.setHue(hueInstance);
+                    .onConnected(result -> {
+                        hueAPI.setHue(result.getInstance());
+                        result.updateProperties("api_key", "ip");
                         setConnectionButtonText("Disconnect");
                     });
             connector = builder.build();
             connector.runAsync();
         } catch (MinorException exception) {
             getLogger().log(Level.WARNING, "Failed to load properties", exception);
-            Utils.showAlert("Failed to connect to Hue Bridge\nFailed to load properties", StreamPiAlertType.WARNING);
+            Utils.showAlert(
+                    "Hue connection failed",
+                    "Failed to connect to Hue Bridge\nFailed to load properties",
+                    StreamPiAlertType.WARNING
+            );
         }
+    }
+
+    @Nullable
+    private String getNullableProperty(@NotNull String name) throws MinorException {
+        Property property = getPropertyByName(name);
+        String string = property.getStringValue();
+        if (string == null || string.isBlank()) return null;
+        else return string;
     }
 
     @NotNull

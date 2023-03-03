@@ -1,4 +1,4 @@
-import de.dereingerostete.hue.toggle.HueToggleAction;
+import toggle.HueToggleAction;
 
 module de.dereingerostete.hue.toggle {
     requires com.stream_pi.action_api;

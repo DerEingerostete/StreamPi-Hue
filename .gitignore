@@ -1,5 +1,7 @@
 # Project exclude paths
 /HueMaster/target/
 /HueToggle/target/
+/HueSetColor/target
+/build
 /.idea
 *.iml

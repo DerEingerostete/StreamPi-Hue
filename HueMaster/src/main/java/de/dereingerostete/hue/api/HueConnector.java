@@ -1,7 +1,11 @@
 package de.dereingerostete.hue.api;
 
+import com.stream_pi.action_api.actionproperty.ServerProperties;
+import com.stream_pi.action_api.actionproperty.property.Property;
+import com.stream_pi.action_api.externalplugin.ExternalPlugin;
 import com.stream_pi.util.alert.StreamPiAlert;
 import com.stream_pi.util.alert.StreamPiAlertType;
+import com.stream_pi.util.exception.MinorException;
 import de.dereingerostete.hue.interal.HueStartupUtils;
 import de.dereingerostete.hue.interal.Utils;
 import io.github.zeroone3010.yahueapi.Hue;
@@ -11,6 +15,9 @@ import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,7 +26,7 @@ import java.util.logging.Logger;
 @Builder(builderClassName = "Builder")
 @AllArgsConstructor
 public class HueConnector implements Runnable {
-    private final @Nullable Consumer<Hue> onConnected;
+    private final @Nullable Consumer<ConnectResult> onConnected;
     private final @Nullable Runnable onConnectFail;
     private final @NotNull Logger logger;
     private @Nullable String bridgeIp, apiKey, appName;
@@ -28,55 +35,97 @@ public class HueConnector implements Runnable {
     public void runAsync() {
         Thread thread = new Thread(this);
         thread.setName("HueConnector");
-        thread.setDaemon(true);
+        thread.setDaemon(false); //Should be true but check for errors
         thread.start();
     }
 
     @Override
     public void run() {
+        ConnectResult result = connect();
+        if (result != null && onConnected != null) onConnected.accept(result);
+        else if (result == null && onConnectFail != null) onConnectFail.run();
+        connecting = false;
+    }
+
+    @Nullable
+    public ConnectResult connect() {
+        getLogger().info("Connecting to Hue");
+        boolean verifyIp = true;
         try {
             if (bridgeIp == null) {
+                getLogger().info("Discovering bridge...");
                 bridgeIp = HueStartupUtils.discoverBridgeIp();
                 if (bridgeIp == null) {
+                    getLogger().warning("No Hue bridge was discovered");
                     Utils.showAlert(
+                            "Hue connection failed",
                             "No Hue Bridge was discovered!\nPlease manually enter one.",
                             StreamPiAlertType.INFORMATION
                     );
-                    connecting = false;
-                    if (onConnectFail != null) onConnectFail.run();
-                    return;
+                    return null;
                 }
+
+                getLogger().info("Bridge discovered: " + bridgeIp);
+                verifyIp = false;
             }
         } catch (Exception exception) {
-            connecting = false;
             logWarning("Failed to discover Hue Bridge IP",
                     "Please manually enter one.", false, exception);
-            if (onConnectFail != null) onConnectFail.run();
-            return;
+            return null;
         }
 
         try {
+            if (verifyIp && !HueStartupUtils.isBridge(bridgeIp)) {
+                getLogger().log(Level.WARNING, "IP address does not belong to a bridge");
+                Utils.showAlert(
+                        "Hue connection failed",
+                        "The specified IP address does not belong to a Hue bridge!",
+                        StreamPiAlertType.WARNING
+                );
+                return null;
+            }
+        } catch (ExecutionException | InterruptedException exception) {
+            logWarning("Failed to validate IP address", null, true, exception);
+            return null;
+        }
+
+        boolean verifyKey = true;
+        try {
             if (apiKey == null) {
+                getLogger().info("No api key was configured");
                 if (appName == null) throw new IllegalStateException("No app name is defined");
-                apiKey = HueStartupUtils.authenticate(bridgeIp, appName);
+
+                apiKey = HueStartupUtils.authenticate(Objects.requireNonNull(bridgeIp), appName);
                 if (apiKey == null) {
                     getLogger().warning("Failed to authorize with Hue Bridge: Returned null as ApiKey");
-                    Utils.showAlert("Failed to authorize with Hue Bridge", StreamPiAlertType.WARNING);
-                    connecting = false;
-                    if (onConnectFail != null) onConnectFail.run();
-                    return;
+                    Utils.showAlert("Hue connection failed", "Failed to authorize with Hue Bridge", StreamPiAlertType.WARNING);
+                    return null;
                 }
+                verifyKey = false;
             }
         } catch (Exception exception) {
-            connecting = false;
             logWarning("Failed to authorize with Hue Bridge", null, true, exception);
-            if (onConnectFail != null) onConnectFail.run();
-            return;
+            return null;
+        }
+
+        try {
+            if (verifyKey && !HueStartupUtils.isAuthenticated(Objects.requireNonNull(bridgeIp), apiKey)) {
+                getLogger().log(Level.WARNING, "Hue api key is invalid");
+                Utils.showAlert(
+                        "Authentication failed",
+                        "The entered api key is not valid for this bridge",
+                        StreamPiAlertType.WARNING
+                );
+                return null;
+            }
+        } catch (IOException exception) {
+            logWarning("Failed to validate api key", null, true, exception);
+            return null;
         }
 
         Hue hue = new Hue(bridgeIp, apiKey);
-        if (onConnected != null) onConnected.accept(hue);
-        connecting = false;
+        return new ConnectResult(hue, Objects.requireNonNull(apiKey),
+                Objects.requireNonNull(bridgeIp), !verifyKey, !verifyIp);
     }
 
     private void logWarning(@NotNull String message, @Nullable String alertAppend,
@@ -90,6 +139,30 @@ public class HueConnector implements Runnable {
 
         StreamPiAlert alert = new StreamPiAlert(context, StreamPiAlertType.WARNING);
         alert.show();
+    }
+
+    @Data
+    public static class ConnectResult {
+        private final @NotNull Hue instance;
+        private final @NotNull String apiKey;
+        private final @NotNull String bridgeIp;
+        private final boolean updatedKey, updatedIp;
+
+        public void updateProperties(@NotNull String apiKeyName, @NotNull String bridgeIpName) {
+            ExternalPlugin plugin = Objects.requireNonNull(HueAPI.getInstance().getPlugin());
+            try {
+                ServerProperties properties = plugin.getServerProperties();
+                Property apiKeyProperty = properties.getSingleProperty(apiKeyName);
+                if (updatedKey) apiKeyProperty.setStringValue(apiKey);
+
+                Property bridgeIpProperty = properties.getSingleProperty(bridgeIpName);
+                if (updatedIp) bridgeIpProperty.setStringValue(bridgeIp);
+                if (updatedIp || updatedKey) plugin.saveServerProperties();
+            } catch (MinorException exception) {
+                plugin.getLogger().log(Level.WARNING, "Failed to save ApiKey", exception);
+            }
+        }
+
     }
 
 }

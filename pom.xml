@@ -7,17 +7,23 @@
     <groupId>de.dereingerostete.hue</groupId>
     <artifactId>stream-pi-hue</artifactId>
     <version>1.0</version>
-    <packaging>pom</packaging>
+
     <name>StreamPi-Hue</name>
+    <packaging>pom</packaging>
+
     <modules>
         <module>HueToggle</module>
         <module>HueMaster</module>
+        <module>HueSetColor</module>
     </modules>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <assembly.skipAssembly>true</assembly.skipAssembly>
+        <lombok.version>1.18.24</lombok.version>
     </properties>
 
     <licenses>

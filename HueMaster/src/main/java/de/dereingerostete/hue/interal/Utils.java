@@ -7,8 +7,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class Utils {
 
-    public static void showAlert(@NotNull String message, @NotNull StreamPiAlertType type) {
-        StreamPiAlert alert = new StreamPiAlert(message, type);
+    public static void showAlert(@NotNull String title, @NotNull String message, @NotNull StreamPiAlertType type) {
+        StreamPiAlert alert = new StreamPiAlert(title, message, type);
         alert.show();
     }
 
