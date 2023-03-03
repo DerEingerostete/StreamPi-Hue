@@ -18,3 +18,6 @@ call mvn clean package -DskipTests
 move .\HueMaster\target\hue-master-%VERSION%.jar .\%FOLDER%\Hue-Master-%VERSION%.jar
 move .\HueToggle\target\hue-toggle-%VERSION%.jar .\%FOLDER%\Hue-Toggle-%VERSION%.jar
 move .\HueSetColor\target\hue-set-color-%VERSION%.jar .\%FOLDER%\Hue-Set-Color-%VERSION%.jar
+call mvn clean
+
+echo Done
