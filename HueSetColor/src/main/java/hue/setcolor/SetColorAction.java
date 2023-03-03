@@ -53,7 +53,8 @@ public class SetColorAction extends NormalAction {
 
         lightType = Arrays.asList(
                 new ListValue(1, "Light"),
-                new ListValue(2, "Room")
+                new ListValue(2, "Room"),
+                new ListValue(99, "All")
         );
     }
 
@@ -66,7 +67,7 @@ public class SetColorAction extends NormalAction {
 
         Property nameProperty = new Property("name", Type.STRING);
         nameProperty.setDisplayName("Light/Room Name");
-        nameProperty.setCanBeBlank(false);
+        nameProperty.setCanBeBlank(true);
 
         Property colorProperty = new Property("hex_color", Type.STRING);
         colorProperty.setDisplayName("Hex Color");
@@ -167,7 +168,7 @@ public class SetColorAction extends NormalAction {
         }
 
         String name = getNullableProperty("name");
-        if (name == null) return;
+        if (name == null && type != 99) return;
 
         try {
             switch (type) {
@@ -176,6 +177,9 @@ public class SetColorAction extends NormalAction {
                     break;
                 case 2:
                     room = hueAPI.getRoom(name);
+                    break;
+                case 99:
+                    room = hueAPI.getAllLightsRoom();
                     break;
             }
         } catch (Exception exception) {

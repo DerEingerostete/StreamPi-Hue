@@ -80,6 +80,11 @@ public class HueAPI {
     }
 
     @NotNull
+    public Room getAllLightsRoom() {
+        return Objects.requireNonNull(hue).getAllLights();
+    }
+
+    @NotNull
     public static HueAPI getInstance() {
         return INSTANCE;
     }

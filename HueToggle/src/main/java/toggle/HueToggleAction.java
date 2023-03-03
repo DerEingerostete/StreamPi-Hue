@@ -52,7 +52,8 @@ public class HueToggleAction extends ToggleAction {
 
         lightType = Arrays.asList(
                 new ListValue(1, "Light"),
-                new ListValue(2, "Room")
+                new ListValue(2, "Room"),
+                new ListValue(99, "All")
         );
     }
 
@@ -65,7 +66,7 @@ public class HueToggleAction extends ToggleAction {
 
         Property nameProperty = new Property("name", Type.STRING);
         nameProperty.setDisplayName("Light/Room Name");
-        nameProperty.setCanBeBlank(false);
+        nameProperty.setCanBeBlank(true);
 
         Property transitionProperty = new Property("transition_time", Type.DOUBLE);
         transitionProperty.setDisplayName("Transition Time (Seconds)");
@@ -189,8 +190,7 @@ public class HueToggleAction extends ToggleAction {
         String name = property.getStringValue();
         if (name == null || name.isBlank()) name = null;
 
-        //getLogger().info("Updating light of type '" + type + "' with name '" + name + "'");
-        if (name == null) {
+        if (name == null && type != 99) {
             getLogger().warning("HueToggle: No name set");
             return;
         }
@@ -202,6 +202,9 @@ public class HueToggleAction extends ToggleAction {
                     break;
                 case 2:
                     room = hueAPI.getRoom(name);
+                    break;
+                case 99:
+                    room = hueAPI.getAllLightsRoom();
                     break;
             }
         } catch (Exception exception) {
