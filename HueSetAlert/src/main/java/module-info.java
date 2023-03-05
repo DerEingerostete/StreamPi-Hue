@@ -16,11 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import hue.setcolor.SetColorAction;
+import hue.setalert.SetAlertAction;
 
-module de.dereingerostete.hue.setcolor {
+module de.dereingerostete.hue.setalert {
     requires com.stream_pi.action_api;
     requires de.dereignerostete.hue.master;
 
-    provides com.stream_pi.action_api.externalplugin.ExternalPlugin with SetColorAction;
+    provides com.stream_pi.action_api.externalplugin.ExternalPlugin with SetAlertAction;
 }

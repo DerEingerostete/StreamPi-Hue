@@ -16,15 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-module de.dereignerostete.hue.master {
+import hue.setstate.SetState;
+
+module de.dereingerostete.hue.setstate {
     requires com.stream_pi.action_api;
-    requires com.stream_pi.util;
+    requires de.dereignerostete.hue.master;
 
-    requires static lombok;
-    requires transitive org.jetbrains.annotations;
-    requires transitive yetanotherhueapi;
-
-    exports de.dereingerostete.hue.api;
-    exports de.dereingerostete.hue.api.action;
-    provides com.stream_pi.action_api.externalplugin.ExternalPlugin with de.dereingerostete.hue.HueMaster;
+    provides com.stream_pi.action_api.externalplugin.ExternalPlugin with SetState;
 }

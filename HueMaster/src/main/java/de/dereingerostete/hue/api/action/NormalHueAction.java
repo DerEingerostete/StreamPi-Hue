@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package hue.setcolor;
+package de.dereingerostete.hue.api.action;
 
 import com.stream_pi.action_api.actionproperty.property.ListValue;
 import com.stream_pi.action_api.actionproperty.property.Property;
@@ -26,10 +26,8 @@ import com.stream_pi.util.alert.StreamPiAlert;
 import com.stream_pi.util.alert.StreamPiAlertType;
 import com.stream_pi.util.exception.MinorException;
 import de.dereingerostete.hue.api.HueAPI;
-import io.github.zeroone3010.yahueapi.Color;
 import io.github.zeroone3010.yahueapi.Light;
 import io.github.zeroone3010.yahueapi.Room;
-import io.github.zeroone3010.yahueapi.State;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,20 +35,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
-public class SetColorAction extends NormalAction {
-    private final @NotNull HueAPI hueAPI = HueAPI.getInstance();
-    private final @NotNull List<ListValue> lightType;
-    private @Nullable Light light;
-    private @Nullable Room room;
+public abstract class NormalHueAction extends NormalAction {
+    protected final @NotNull HueAPI hueAPI = HueAPI.getInstance();
+    protected final @NotNull List<ListValue> lightType;
+    protected @Nullable Light light;
+    protected @Nullable Room room;
 
-    public SetColorAction() {
-        setName("Set Lights Color");
-        setCategory("Hue");
-        setAuthor("DerEingerostete");
-        setHelpLink("https://github.com/DerEingerostete/StreamPi-Hue");
-        setVisibilityInServerSettingsPane(false);
-        setVersion(HueAPI.VERSION);
-
+    public NormalHueAction() {
         lightType = Arrays.asList(
                 new ListValue(1, "Light"),
                 new ListValue(2, "Room"),
@@ -69,23 +60,11 @@ public class SetColorAction extends NormalAction {
         nameProperty.setDisplayName("Light/Room Name");
         nameProperty.setCanBeBlank(true);
 
-        Property colorProperty = new Property("hex_color", Type.STRING);
-        colorProperty.setDisplayName("Hex Color");
-        colorProperty.setDefaultValueStr("#FFFFFF");
-        colorProperty.setCanBeBlank(false);
-
-        Property transitionProperty = new Property("transition_time", Type.DOUBLE);
-        transitionProperty.setDisplayName("Transition Time (Seconds)");
-        transitionProperty.setDefaultValueDouble(0);
-        transitionProperty.setMinDoubleValue(0);
-        transitionProperty.setMaxDoubleValue(1000);
-
         Property autoConnectProperty = new Property("auto_connect", Type.BOOLEAN);
         autoConnectProperty.setDisplayName("Auto Connect if not connected");
         autoConnectProperty.setDefaultValueBoolean(true);
 
-        //Add all properties
-        addClientProperties(typeProperty, nameProperty, colorProperty, transitionProperty, autoConnectProperty);
+        addClientProperties(typeProperty, nameProperty, autoConnectProperty);
     }
 
     @Override
@@ -98,36 +77,11 @@ public class SetColorAction extends NormalAction {
             }
         }
 
-        int transitionTime;
-        try {
-            Property tranistionProperty = getPropertyByName("transition_time");
-            transitionTime = (int) (tranistionProperty.getDoubleValue() * 10D);
-        } catch (Exception exception) {
-            getLogger().log(Level.WARNING, "HueToggle: No transition time set: " + exception.getMessage(), exception);
+        Runnable runnable = onClicked();
+        if (runnable == null) {
+            getLogger().info(getClass().getSimpleName() + ": Runnable is null. Will not execute");
             return;
         }
-
-        String hexColor = getNullableProperty("hex_color");
-        if (hexColor == null) return;
-
-        Color color;
-        try {
-            color = Color.of(hexColor);
-        } catch (IllegalArgumentException exception) {
-            getLogger().warning("Color is not valid");
-            return;
-        }
-
-        State state = State.builder()
-                .color(color)
-                .transitionTime(transitionTime)
-                .keepCurrentState();
-
-        Runnable runnable = () -> {
-            if (light != null) light.setState(state);
-            else if (room != null) room.setState(state);
-            else getLogger().warning("Cannot toggle light: No light or room found");
-        };
 
         if (hueAPI.isConnected()) {
             runnable.run();
@@ -139,6 +93,9 @@ public class SetColorAction extends NormalAction {
         else getLogger().warning("Hue is not connecting. Cannot toggle");
     }
 
+    @Nullable
+    public abstract Runnable onClicked() throws MinorException;
+
     @Override
     public void onActionSavedFromServer() throws MinorException {
         loadLight();
@@ -149,7 +106,7 @@ public class SetColorAction extends NormalAction {
         loadLight();
     }
 
-    private void loadLight() throws MinorException {
+    protected void loadLight() throws MinorException {
         if (!hueAPI.isConnected()) {
             getLogger().warning("Could not load light: API is not connected");
             return;
@@ -199,12 +156,12 @@ public class SetColorAction extends NormalAction {
     }
 
     @NotNull
-    private Property getPropertyByName(@NotNull String name) throws MinorException {
+    protected Property getPropertyByName(@NotNull String name) throws MinorException {
         return getClientProperties().getSingleProperty(name);
     }
 
     @Nullable
-    private String getNullableProperty(@NotNull String name) throws MinorException {
+    protected String getNullableProperty(@NotNull String name) throws MinorException {
         Property property = getPropertyByName(name);
         String string = property.getStringValue();
         if (string == null || string.isBlank()) return null;

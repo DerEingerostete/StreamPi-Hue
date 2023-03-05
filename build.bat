@@ -17,7 +17,10 @@ echo Version set to '%VERSION%'
 call mvn clean package -DskipTests
 move .\HueMaster\target\hue-master-%VERSION%.jar .\%FOLDER%\Hue-Master-%VERSION%.jar
 move .\HueToggle\target\hue-toggle-%VERSION%.jar .\%FOLDER%\Hue-Toggle-%VERSION%.jar
-move .\HueSetColor\target\hue-set-color-%VERSION%.jar .\%FOLDER%\Hue-Set-Color-%VERSION%.jar
+move .\HueSetState\target\hue-set-state-%VERSION%.jar .\%FOLDER%\Hue-Set-State-%VERSION%.jar
+move .\HueSetEffect\target\hue-set-effect-%VERSION%.jar .\%FOLDER%\Hue-Set-Effect-%VERSION%.jar
+move .\HueSetAlert\target\hue-set-alert-%VERSION%.jar .\%FOLDER%\Hue-Set-Alert-%VERSION%.jar
+move .\HueSetScene\target\hue-set-scene-%VERSION%.jar .\%FOLDER%\Hue-Set-Scene-%VERSION%.jar
 call mvn clean
 
 echo Done

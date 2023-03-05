@@ -14,7 +14,10 @@
     <modules>
         <module>HueToggle</module>
         <module>HueMaster</module>
-        <module>HueSetColor</module>
+        <module>HueSetState</module>
+        <module>HueSetAlert</module>
+        <module>HueSetEffect</module>
+        <module>HueSetScene</module>
     </modules>
 
     <properties>

@@ -23,11 +23,14 @@ import com.stream_pi.util.version.Version;
 import io.github.zeroone3010.yahueapi.Hue;
 import io.github.zeroone3010.yahueapi.Light;
 import io.github.zeroone3010.yahueapi.Room;
+import io.github.zeroone3010.yahueapi.domain.Root;
+import io.github.zeroone3010.yahueapi.domain.Scene;
 import javafx.scene.control.Button;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -79,10 +82,27 @@ public class HueAPI {
         return Objects.requireNonNull(hue).getRoomByName(name).orElse(null);
     }
 
+    @Nullable
+    public String getSceneId(@NotNull String name) {
+        Root root = Objects.requireNonNull(hue).getRaw();
+        if (root == null) {
+            hue.refresh();
+            root = hue.getRaw();
+            if (root == null) return null;
+        }
+
+        Map.Entry<String, Scene> entry = root.getScenes().entrySet()
+                .stream()
+                .filter(current -> current.getValue().getName().equalsIgnoreCase(name))
+                .findAny().orElse(null);
+        return entry == null ? null : entry.getKey();
+    }
+
     @NotNull
     public Room getAllLightsRoom() {
         return Objects.requireNonNull(hue).getAllLights();
     }
+
 
     @NotNull
     public static HueAPI getInstance() {

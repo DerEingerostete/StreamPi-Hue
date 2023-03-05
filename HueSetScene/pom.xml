@@ -9,8 +9,8 @@
         <version>1.0</version>
     </parent>
 
-    <artifactId>hue-set-color</artifactId>
-    <name>SetColor</name>
+    <artifactId>hue-set-scene</artifactId>
+    <name>SetScene</name>
     <packaging>jar</packaging>
 
     <dependencies>
