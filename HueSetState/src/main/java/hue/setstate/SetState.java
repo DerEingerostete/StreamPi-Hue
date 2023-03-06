@@ -83,7 +83,7 @@ public class SetState extends NormalHueAction {
         temperatureProperty.setDefaultValueInt(-1);
 
         Property saturationProperty = new Property("saturation_value", Type.INTEGER);
-        saturationProperty.setDisplayName("Hue Saturation (-1 for disabled)");
+        saturationProperty.setDisplayName("Saturation (-1 for disabled)");
         saturationProperty.setMinIntValue(-1);
         saturationProperty.setMaxIntValue(65535);
         saturationProperty.setDefaultValueInt(-1);
