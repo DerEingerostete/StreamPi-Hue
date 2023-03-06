@@ -1,4 +1,4 @@
-[![StreamPi Hue](https://raw.githubusercontent.com/DerEingerostete/StreamPi-Hue/master/StreamPi-Hue.png)](https://github.com/DerEingerostete/StreamPi-Hue)
+[![StreamPi Hue](https://dl.dereingerostete.dev/preview?fileName=StreamPi-Hue-Light.png)](https://github.com/DerEingerostete/StreamPi-Hue)
 
 ## A StreamPi Plugin
 StreamPi Hue is a small plugin that allows the control of a Hue lights via the StreamPi. 
