@@ -138,12 +138,13 @@ public class SetState extends NormalHueAction {
             transitionTime = 0;
         }
 
-        State.Builder builder = (State.Builder) State.builder()
-                .color(color)
-                .transitionTime(transitionTime);
+        State.Builder builder = (State.Builder) State.builder();
+        builder.transitionTime(transitionTime);
+
+        if (kelvin != -1) builder.colorTemperatureInMireks(mired);
+        else if (color != null) builder.color(color);
 
         if (brightness != -1) builder.brightness(brightness);
-        if (kelvin != -1) builder.colorTemperatureInMireks(mired);
         if (hue != -1) builder.hue(hue);
         if (saturation != -1) builder.saturation(saturation);
         this.state = builder.on(onValue);
