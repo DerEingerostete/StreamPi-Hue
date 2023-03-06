@@ -6,8 +6,8 @@
 ___
 
 <p align="center">
-  <a href="#features">Commands</a> •
-  <a href="#actions">Config</a> •
+  <a href="#features">Features</a> •
+  <a href="#actions">Actions</a> •
   <a href="#dependencies">Dependencies</a> •
   <a href="#download--install">Download & Install</a> •
   <a href="#license">License</a>
