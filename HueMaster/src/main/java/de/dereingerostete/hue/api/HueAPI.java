@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 
 @Data
 public class HueAPI {
-    public static final @NotNull Version VERSION = new Version(1, 0, 0);
+    public static final @NotNull Version VERSION = new Version(1, 0, 1);
     private static final @NotNull HueAPI INSTANCE = new HueAPI();
     private final @NotNull LightRefresher refresher;
     private @Nullable ExternalPlugin plugin;

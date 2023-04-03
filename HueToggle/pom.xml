@@ -6,7 +6,7 @@
     <parent>
         <groupId>de.dereingerostete.hue</groupId>
         <artifactId>stream-pi-hue</artifactId>
-        <version>1.0</version>
+        <version>1.0.1</version>
     </parent>
 
     <artifactId>hue-toggle</artifactId>
@@ -22,14 +22,14 @@
         <dependency>
             <groupId>de.dereingerostete.hue</groupId>
             <artifactId>hue-master</artifactId>
-            <version>1.0</version>
+            <version>1.0.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>de.dereingerostete.hue</groupId>
             <artifactId>hue-master</artifactId>
-            <version>1.0</version>
+            <version>1.0.1</version>
             <scope>compile</scope>
         </dependency>
 

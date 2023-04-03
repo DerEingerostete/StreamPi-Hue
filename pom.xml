@@ -6,7 +6,7 @@
 
     <groupId>de.dereingerostete.hue</groupId>
     <artifactId>stream-pi-hue</artifactId>
-    <version>1.0</version>
+    <version>1.0.1</version>
 
     <name>StreamPi-Hue</name>
     <packaging>pom</packaging>

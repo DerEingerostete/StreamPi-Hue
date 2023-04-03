@@ -2,7 +2,7 @@
 
 :: Configurations
 set FOLDER=build
-set VERSION=1.0
+set VERSION=1.0.1
 
 :: Clear output folder
 echo Current directory: %CD%
