@@ -142,6 +142,16 @@ public class HueConnector implements Runnable {
         }
 
         Hue hue = new Hue(bridgeIp, apiKey);
+        hue.setCaching(true);
+
+        String bridgeName;
+        try {
+            bridgeName = hue.getRaw().getConfig().getName();
+        } catch (RuntimeException exception) {
+            bridgeName = "Unknown";
+        }
+
+        getLogger().info("Connected to bridge: " + bridgeIp + '/' + bridgeName);
         return new ConnectResult(hue, Objects.requireNonNull(apiKey),
                 Objects.requireNonNull(bridgeIp), !verifyKey, !verifyIp);
     }

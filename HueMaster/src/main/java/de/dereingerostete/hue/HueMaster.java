@@ -22,22 +22,16 @@ import com.stream_pi.action_api.actionproperty.property.ControlType;
 import com.stream_pi.action_api.actionproperty.property.Property;
 import com.stream_pi.action_api.actionproperty.property.Type;
 import com.stream_pi.action_api.externalplugin.NormalAction;
-import com.stream_pi.util.alert.StreamPiAlertType;
 import com.stream_pi.util.exception.MinorException;
 import de.dereingerostete.hue.api.HueAPI;
-import de.dereingerostete.hue.api.HueConnector;
-import de.dereingerostete.hue.interal.Utils;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.logging.Level;
-
 public class HueMaster extends NormalAction {
     private final @NotNull HueAPI hueAPI = HueAPI.getInstance();
     private final @NotNull Button connectionButton;
-    private @Nullable HueConnector connector;
     private boolean firstRun;
 
     public HueMaster() {
@@ -74,66 +68,58 @@ public class HueMaster extends NormalAction {
         startupProperty.setDisplayName("Connect On Startup");
         startupProperty.setDefaultValueBoolean(true);
 
+        Property refreshProperty = new Property("refresh_timer", Type.INTEGER);
+        refreshProperty.setDisplayName("Refresh Lights (Seconds)");
+        refreshProperty.setDefaultValueInt(20);
+        refreshProperty.setMaxIntValue(259200); //3 Days
+        refreshProperty.setMinIntValue(1);
+
         //Add all properties
-        addServerProperties(urlProperty, keyProperty, appNameProperty, startupProperty);
+        addServerProperties(urlProperty, keyProperty, appNameProperty, startupProperty, refreshProperty);
     }
 
     @Override
     public void initAction() throws MinorException {
-        boolean startupRun = getPropertyByName("connect_on_startup").getBoolValue();
-        if (startupRun && firstRun) {
-            getLogger().info("Connecting to Hue");
-            connect();
-        }
-
-        String bridgeIp = getNullableProperty("ip");
-        String apiKey = getNullableProperty("api_key");
-        String appName = getNullableProperty("app_name");
-
-        hueAPI.setProperties(bridgeIp, apiKey, appName);
+        loadHueProperties();
         hueAPI.setConnectionButton(connectionButton);
         hueAPI.setLogger(getLogger());
 
         connectionButton.setOnAction(event -> {
-            if (connector != null && connector.isConnecting()) return;
             if (hueAPI.getHue() == null) {
                 connect();
             } else {
-                hueAPI.setHue(null);
+                hueAPI.disconnect();
                 setConnectionButtonText("Connect");
             }
         });
 
+        boolean startupRun = getPropertyByName("connect_on_startup").getBoolValue();
+        if (startupRun && firstRun) connect();
         firstRun = false;
     }
 
-    private void connect() {
-        try {
-            String apiKey = getNullableProperty("api_key");
-            String bridgeIp = getNullableProperty("ip");
-            String appName = getNullableProperty("app_name");
+    @Override
+    public void onServerPropertiesSavedByUser() throws MinorException {
+        loadHueProperties();
+    }
 
-            HueConnector.Builder builder = HueConnector.builder()
-                    .bridgeIp(bridgeIp)
-                    .apiKey(apiKey)
-                    .appName(appName)
-                    .logger(getLogger())
-                    .onConnectFail(() -> setConnectionButtonText("Connect"))
-                    .onConnected(result -> {
-                        hueAPI.setHue(result.getInstance());
-                        result.updateProperties("api_key", "ip");
-                        setConnectionButtonText("Disconnect");
-                    });
-            connector = builder.build();
-            connector.runAsync();
-        } catch (MinorException exception) {
-            getLogger().log(Level.WARNING, "Failed to load properties", exception);
-            Utils.showAlert(
-                    "Hue connection failed",
-                    "Failed to connect to Hue Bridge\nFailed to load properties",
-                    StreamPiAlertType.WARNING
-            );
-        }
+    @Override
+    public void onActionSavedFromServer() throws MinorException {
+        loadHueProperties();
+    }
+
+    private void loadHueProperties() throws MinorException {
+        String bridgeIp = getNullableProperty("ip");
+        String apiKey = getNullableProperty("api_key");
+        String appName = getNullableProperty("app_name");
+
+        Property refreshProperty = getPropertyByName("refresh_timer");
+        int refreshTimer = refreshProperty.getIntValue();
+        hueAPI.setProperties(bridgeIp, apiKey, appName, refreshTimer);
+    }
+
+    private void connect() {
+        hueAPI.connect(() -> setConnectionButtonText("Disconnect"));
     }
 
     @Nullable

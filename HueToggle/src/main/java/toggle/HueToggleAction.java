@@ -26,6 +26,7 @@ import com.stream_pi.util.alert.StreamPiAlert;
 import com.stream_pi.util.alert.StreamPiAlertType;
 import com.stream_pi.util.exception.MinorException;
 import de.dereingerostete.hue.api.HueAPI;
+import de.dereingerostete.hue.api.LightRefresher;
 import io.github.zeroone3010.yahueapi.Light;
 import io.github.zeroone3010.yahueapi.Room;
 import io.github.zeroone3010.yahueapi.State;
@@ -36,7 +37,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
-public class HueToggleAction extends ToggleAction {
+public class HueToggleAction extends ToggleAction implements LightRefresher.Refreshable {
     private final @NotNull HueAPI hueAPI = HueAPI.getInstance();
     private final @NotNull List<ListValue> lightType;
     private @Nullable Light light;
@@ -110,11 +111,9 @@ public class HueToggleAction extends ToggleAction {
             }
         }
 
-        boolean isOn;
-        if (light != null) isOn = light.isOn();
-        else isOn = room.isAnyOn();
-        setCurrentStatus(!isOn);
-        getLogger().info("HueToggle: Set toggle to: " + isOn);
+        LightRefresher refresher = hueAPI.getRefresher();
+        if (!refresher.addAction(this)) getLogger().warning("LightRefresher: Not added");
+        refresh();
     }
 
     @Override
@@ -156,6 +155,7 @@ public class HueToggleAction extends ToggleAction {
             if (light != null) light.setState(state);
             else if (room != null) room.setState(state);
             else getLogger().warning("Cannot toggle light: No light or room found");
+            if (light != null || room != null) hueAPI.refreshToggles(getId());
         };
 
         if (hueAPI.isConnected()) {
@@ -215,12 +215,46 @@ public class HueToggleAction extends ToggleAction {
         if (room == null && light == null) {
             getLogger().warning("Failed to load Hue item");
             StreamPiAlert alert = new StreamPiAlert(
-                    "Hue",
-                    "No " + typeName + " found with the name '" + name + "'",
+                    "Hue", "No " + typeName + " found with the name '" + name + "'",
                     StreamPiAlertType.WARNING
             );
             alert.show();
+        } else refresh();
+    }
+
+    @Override
+    public void onActionCreate() {
+        getLogger().info("Created");
+        LightRefresher refresher = hueAPI.getRefresher();
+        if (!refresher.addAction(this)) getLogger().warning("LightRefresher: Not added");
+    }
+
+    @Override
+    public void onActionDeleted() {
+        LightRefresher refresher = hueAPI.getRefresher();
+        refresher.removeAction(this);
+    }
+
+    @Override
+    public void refresh() {
+        boolean enabled;
+        if (light != null) {
+            enabled = light.isOn();
+        } else if (room != null) {
+            enabled = room.isAllOn();
+        } else return;
+
+        try {
+            if (enabled != getCurrentStatus()) setCurrentStatus(enabled);
+        } catch (MinorException exception) {
+            getLogger().log(Level.WARNING, "Could not refresh action", exception);
         }
+    }
+
+    @NotNull
+    @Override
+    public String getId() {
+        return super.getID();
     }
 
     @NotNull
