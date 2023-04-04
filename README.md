@@ -14,7 +14,7 @@ ___
 </p>
 
 ## A StreamPi Plugin
-StreamPi Hue is a small plugin that allows the control of a Hue lights via the StreamPi. 
+StreamPi Hue is a small plugin that allows the control of your Philips Hue lights via StreamPi. 
 
 ## Features
 - Toggle Lights or Groups on / off
