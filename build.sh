@@ -7,7 +7,7 @@ outputName="StreamPi-Hue-$version"
 
 # Install dependencies
 echo "Installing dependencies"
-sudo apt -qq install -y zip, tar
+sudo apt-get -qq install -y zip tar
 
 # Clear output folder
 echo "Current directory: $PWD"
