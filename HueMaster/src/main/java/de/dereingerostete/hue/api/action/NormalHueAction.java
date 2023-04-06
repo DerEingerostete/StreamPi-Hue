@@ -101,11 +101,6 @@ public abstract class NormalHueAction extends NormalAction {
         loadLight();
     }
 
-    @Override
-    public void onServerPropertiesSavedByUser() throws MinorException {
-        loadLight();
-    }
-
     protected void loadLight() throws MinorException {
         if (!hueAPI.isConnected()) {
             getLogger().warning("Could not load light: API is not connected");

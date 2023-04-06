@@ -94,11 +94,6 @@ public class HueToggleAction extends ToggleAction implements LightRefresher.Refr
     }
 
     @Override
-    public void onServerPropertiesSavedByUser() throws MinorException {
-        loadLight();
-    }
-
-    @Override
     public void onClientConnected() throws MinorException {
         Property property = getPropertyByName("refresh_on_load");
         if (!property.getBoolValue()) return;
@@ -237,7 +232,7 @@ public class HueToggleAction extends ToggleAction implements LightRefresher.Refr
 
     @Override
     public void refresh() {
-        if (this.getSocketAddressForClient() == null) return;
+        if (getSocketAddressForClient() == null) return;
 
         boolean enabled;
         if (light != null) {
