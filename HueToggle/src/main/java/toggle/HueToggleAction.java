@@ -237,6 +237,8 @@ public class HueToggleAction extends ToggleAction implements LightRefresher.Refr
 
     @Override
     public void refresh() {
+        if (this.getSocketAddressForClient() == null) return;
+
         boolean enabled;
         if (light != null) {
             enabled = light.isOn();
