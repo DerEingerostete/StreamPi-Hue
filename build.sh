@@ -11,7 +11,7 @@ sudo apt-get -qq install -y zip tar
 
 # Clear output folder
 echo "Current directory: $PWD"
-rm -r $folder
+if [ -d "$folder" ]; then rm -rf $folder; fi
 mkdir $folder
 
 # Debug info
@@ -35,8 +35,10 @@ mv ./HueSetScene/target/hue-set-scene-$version.jar ./$folder/Hue-Set-Scene-$vers
 echo "Run cleanup"
 mvn -q clean
 
-# Create directory
+# Create archives
 find $folder -printf "%P\n" -type f -o -type l -o -type d | tar -czf $outputName.tar.gz --no-recursion -C $folder -T -
 zip -r -qq -j $outputName.zip $folder
+mv $outputName.tar.gz build
+mv $outputName.zip build
 
 echo Done
