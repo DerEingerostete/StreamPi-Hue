@@ -20,7 +20,7 @@ echo "Version set to $version"
 
 # Build maven
 echo Building maven packages
-mvn -B package -DskipTests --file pom.xml
+mvn -B -q package -DskipTests --file pom.xml
 
 # Moving files
 echo Moving files
@@ -33,7 +33,7 @@ mv ./HueSetScene/target/hue-set-scene-$version.jar ./$folder/Hue-Set-Scene-$vers
 
 # Cleanup
 echo "Run cleanup"
-mvn clean
+mvn -q clean
 
 # Create directory
 find $folder -printf "%P\n" -type f -o -type l -o -type d | tar -czf $outputName.tar.gz --no-recursion -C $folder -T -
