@@ -5,9 +5,19 @@ folder="build"
 version="1.0.1"
 outputName="StreamPi-Hue-$version"
 
+# Moves a build to the target destination
+function moveBuild {
+  mv "./$1/target/$2-$version.jar" "$folder/$3.jar"
+}
+
+function downloadDependency {
+  echo "Downloading dependency $2"
+  curl --silent --remote-name --output-dir $folder https://repo1.maven.org/maven2/$1/$2/$3/$2-$3.jar
+}
+
 # Install dependencies
-echo "Installing dependencies"
-sudo apt-get -qq install -y zip tar
+echo "Installing packages"
+sudo apt-get -qq install -y zip tar curl
 
 # Clear output folder
 echo "Current directory: $PWD"
@@ -18,18 +28,24 @@ mkdir $folder
 echo "Folder set to $folder"
 echo "Version set to $version"
 
+# Downloading dependencies
+echo "Downloading dependencies"
+downloadDependency "io/github/zeroone3010" "yetanotherhueapi" "2.7.0"
+downloadDependency "com/fasterxml/jackson/core" "jackson-databind" "2.14.2"
+downloadDependency "org/jetbrains" "annotations" "24.0.1"
+
 # Build maven
 echo Building maven packages
 mvn -B -q package -DskipTests --file pom.xml
 
 # Moving files
 echo Moving files
-mv ./HueMaster/target/hue-master-$version.jar ./$folder/Hue-Master-$version.jar
-mv ./HueToggle/target/hue-toggle-$version.jar ./$folder/Hue-Toggle-$version.jar
-mv ./HueSetState/target/hue-set-state-$version.jar ./$folder/Hue-Set-State-$version.jar
-mv ./HueSetEffect/target/hue-set-effect-$version.jar ./$folder/Hue-Set-Effect-$version.jar
-mv ./HueSetAlert/target/hue-set-alert-$version.jar ./$folder/Hue-Set-Alert-$version.jar
-mv ./HueSetScene/target/hue-set-scene-$version.jar ./$folder/Hue-Set-Scene-$version.jar
+moveBuild "HueMaster" "hue-master" "Hue-Master"
+moveBuild "HueToggle" "hue-toggle" "Hue-Toggle"
+moveBuild "HueSetState" "hue-set-state" "Hue-Set-State"
+moveBuild "HueSetEffect" "hue-set-effect" "Hue-Set-Effect"
+moveBuild "HueSetAlert" "hue-set-alert" "Hue-Set-Alert"
+moveBuild "HueSetScene" "hue-set-scene" "Hue-Set-Scene"
 
 # Cleanup
 echo "Run cleanup"
