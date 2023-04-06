@@ -28,3 +28,4 @@ jobs:
           path: |
             build/*.zip
             build/*.tar.gz
+            build/sha256.txt
