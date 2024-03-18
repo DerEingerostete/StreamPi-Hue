@@ -1,6 +1,6 @@
 <h1 align="center">
   <br/>
-  <a href="https://github.com/DerEingerostete/StreamPi-Hue"><img src="https://dl.dereingerostete.dev/preview?fileName=StreamPi-Hue-Light.png" alt="StreamPi Hue" width="600"></a>
+  <a href="https://github.com/DerEingerostete/StreamPi-Hue"><img src="https://files.dereingerostete.dev/GitHubAssets/StreamPi-Hue-Light.png" alt="StreamPi Hue" width="600"></a>
 </h1>
 
 ___
